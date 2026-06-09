@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Хувийн санхүүгийн бүртгэл</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="CSS/style.css">
+  </head>
+  <body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card shodow-sm p-4 rounded-4">
+                    <div class="card-body"></div>
+                        <h3 class="card-title text-center mb-4 fw-bold text-success"><i class="fa-brands fa-cash-app text-warning"></i>Хувийн санхүүгийн бүртгэл</h3>
+                        <form id="auth-form">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Имэйл хаяг</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label small fw-semibold">Нууц үг</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <div class="d-grid gap-2">
+                            <button type="submit" id="btn-login" class="btn btn-success btn-lg fw-semibold">Нэвтрэх</button> 
+                            <button type="button" id="btn-register" class="btn btn-outline-secondary">Шинээр бүртгүүлэх</button>      
+                            </div>
+                        </form>  
+                        <div id="message" class="text-danger text-center small mt-3 fw-medium"></div>
+                    </div>        
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://kit.fontawesome.com/17142f4cfd.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script type="module" src="js/auth.js"></script>
+  </body>
+</html>
