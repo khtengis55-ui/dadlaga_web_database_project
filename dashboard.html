@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Хувийн санхүү бүртгэл</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Өөрийн CSS -->
+    <!-- 🟡 ЗАСВАР: cdnjs болгосон -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/css/bootstrap.min.css"
+          crossorigin="anonymous">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -19,9 +18,17 @@
             <a class="navbar-brand fw-bold" href="#">
                 <i class="fa-solid fa-wallet"></i> Санхүүгийн самбар
             </a>
-
             <div class="d-flex align-items-center gap-3">
                 <span class="text-light small" id="user-email">....</span>
+
+                <!-- 🔴 ЗАСВАР: Offcanvas нээх товч нэмсэн -->
+                <button class="btn btn-outline-warning btn-sm"
+                        type="button"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#offcanvasBudget"
+                        aria-controls="offcanvasBudget">
+                    <i class="fa-solid fa-bullseye me-1"></i> Төсөв
+                </button>
 
                 <button class="btn btn-outline-light btn-sm" id="btn-logout">
                     <i class="fa-solid fa-right-from-bracket"></i> Гарах
@@ -33,47 +40,38 @@
     <div class="container-fluid px-4">
 
         <div class="row g-3 mb-4">
-
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm bg-primary text-white p-3">
-                    <div>
-                        <h6 class="text-white-50 text-uppercase small">Үлдэгдэл</h6>
-                        <h3 class="fw-bold mb-0" id="total-balance">0 ₮</h3>
-                    </div>
+                    <h6 class="text-white-50 text-uppercase small">Үлдэгдэл</h6>
+                    <h3 class="fw-bold mb-0" id="total-balance">0 ₮</h3>
                 </div>
             </div>
-
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm bg-success text-white p-3">
-                    <div>
-                        <h6 class="text-white-50 text-uppercase small">Нийт орлого</h6>
-                        <h3 class="fw-bold mb-0" id="total-income">0 ₮</h3>
-                    </div>
+                    <h6 class="text-white-50 text-uppercase small">Нийт орлого</h6>
+                    <h3 class="fw-bold mb-0" id="total-income">0 ₮</h3>
                 </div>
             </div>
-
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm bg-danger text-white p-3">
-                    <div>
-                        <h6 class="text-white-50 text-uppercase small">Нийт зарлага</h6>
-                        <h3 class="fw-bold mb-0" id="total-expense">0 ₮</h3>
-                    </div>
+                    <h6 class="text-white-50 text-uppercase small">Нийт зарлага</h6>
+                    <h3 class="fw-bold mb-0" id="total-expense">0 ₮</h3>
                 </div>
             </div>
-
         </div>
 
         <div class="row g-4">
 
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm p-4">
-
                     <h5 class="fw-bold mb-3">Шинэ гүйлгээ</h5>
-
                     <form id="transaction-form">
 
                         <div class="mb-3">
-                            <label>Гүйлгээний төрөл</label>
+                            <!-- 🔴 ЗАСВАР: for attribute нэмсэн -->
+                            <label for="tx-type" class="form-label small fw-medium text-secondary">
+                                Гүйлгээний төрөл
+                            </label>
                             <select id="tx-type" class="form-select" required>
                                 <option value="income">Орлого</option>
                                 <option value="expense">Зарлага</option>
@@ -81,7 +79,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label>Ангилал</label>
+                            <label for="tx-category" class="form-label small fw-medium text-secondary">
+                                Ангилал
+                            </label>
                             <select id="tx-category" class="form-select" required>
                                 <option value="Хүнс">Хоол хүнс</option>
                                 <option value="Цалин">Цалин орлого</option>
@@ -93,60 +93,55 @@
                         </div>
 
                         <div class="mb-3">
-                            <label>Дүн (₮)</label>
+                            <label for="tx-amount" class="form-label small fw-medium text-secondary">
+                                Дүн (₮)
+                            </label>
                             <div class="input-group">
-                                <input
-                                    type="number"
-                                    id="tx-amount"
-                                    class="form-control"
-                                    placeholder="0"
-                                    min="1"
-                                    required
-                                >
+                                <input type="number" id="tx-amount" class="form-control"
+                                       placeholder="0" min="1" required>
                                 <span class="input-group-text">₮</span>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label>Гүйлгээний огноо</label>
+                            <label for="tx-date" class="form-label small fw-medium text-secondary">
+                                Гүйлгээний огноо
+                            </label>
                             <input type="date" id="tx-date" class="form-control" required>
                         </div>
 
                         <div class="mb-3">
-                            <label>Тайлбар</label>
-                            <input
-                                type="text"
-                                id="tx-desc"
-                                class="form-control"
-                                placeholder="Жишээ: И-март орсон, Бонус авсан..."
-                                required
-                            >
+                            <label for="tx-desc" class="form-label small fw-medium text-secondary">
+                                Тайлбар
+                            </label>
+                            <input type="text" id="tx-desc" class="form-control"
+                                   placeholder="Жишээ: И-март орсон, Бонус авсан..." required>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100">
-                            Гүйлгээ нэмэх
+                            <i class="fa-solid fa-circle-plus me-1"></i> Гүйлгээ нэмэх
                         </button>
 
                     </form>
                 </div>
             </div>
+
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm p-4">
-                    <h5>Гүйлгээний түүх</h5>
+                    <h5 class="fw-bold mb-3">Гүйлгээний түүх</h5>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
-                            <tr>
-                                <th>Огноо</th>
-                                <th>Ангилал</th>
-                                <th>Тайлбар</th>
-                                <th>Төрөл</th>
-                                <th class="text-end">Дүн</th>
-                                <th class="text-center">Үйлдэл</th>
-                            </tr>
+                                <tr>
+                                    <th>Огноо</th>
+                                    <th>Ангилал</th>
+                                    <th>Тайлбар</th>
+                                    <th>Төрөл</th>
+                                    <th class="text-end">Дүн</th>
+                                    <th class="text-center">Үйлдэл</th>
+                                </tr>
                             </thead>
-                            <tbody id="transaction-list">
-                            </tbody>
+                            <tbody id="transaction-list"></tbody>
                         </table>
                     </div>
                 </div>
@@ -155,13 +150,74 @@
         </div>
     </div>
 
-    <!-- Font Awesome -->
+    <!-- Offcanvas — container-аас гадна байх нь зөв -->
+    <div class="offcanvas offcanvas-end" tabindex="-1"
+         id="offcanvasBudget" aria-labelledby="offcanvasBudgetLabel">
+        <div class="offcanvas-header bg-dark text-white">
+            <h5 class="offcanvas-title fw-bold" id="offcanvasBudgetLabel">
+                <i class="fa-solid fa-bullseye me-2"></i>Сар бүрийн төсөв тогтоох
+            </h5>
+            <button type="button" class="btn-close btn-close-white"
+                    data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+
+        <div class="offcanvas-body p-4">
+            <p class="text-secondary small mb-4">
+                Та тухайн сард тодорхой ангилалд зарцуулах мөнгөний дээд хязгаарыг
+                тогтоосноор санхүүгээ хэтрэхээс хамгаалж чадна.
+            </p>
+
+            <form id="budget-form">
+                <div class="mb-3">
+                    <label for="budget-category" class="form-label small fw-medium text-secondary">
+                        Ангилал сонгох
+                    </label>
+                    <select class="form-select shadow-sm" id="budget-category" required>
+                        <option value="Хүнс">Хоол хүнс</option>
+                        <option value="Тээвэр">Унаа, тээвэр</option>
+                        <option value="Орон байр">Байр, цахилгаан</option>
+                        <option value="Үзвэр үйлчилгээ">Чөлөөт цаг, худалдан авалт</option>
+                        <option value="Бусад">Бусад</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="budget-amount" class="form-label small fw-medium text-secondary">
+                        Төсвийн хязгаар (₮)
+                    </label>
+                    <div class="input-group shadow-sm">
+                        <input type="number" class="form-control fs-5 fw-bold"
+                               id="budget-amount" placeholder="0" min="1" required>
+                        <span class="input-group-text fw-bold">₮</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="budget-month" class="form-label small fw-medium text-secondary">
+                        Аль сард зориулж
+                    </label>
+                    <input type="month" class="form-control shadow-sm" id="budget-month" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 shadow-sm py-2 fw-bold">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Төсөв батлах
+                </button>
+            </form>
+
+            <hr class="my-4 text-secondary">
+
+            <div id="current-budgets-list">
+                <h6 class="fw-bold text-dark mb-3">Одоогийн тогтоосон төсвүүд:</h6>
+                <div class="text-center py-3 text-muted small bg-light rounded">
+                    Одоогоор төсөв тогтоогоогүй байна.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://kit.fontawesome.com/0c0137132b.js" crossorigin="anonymous"></script>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Auth JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js"
+            crossorigin="anonymous"></script>
     <script type="module" src="js/dashboard.js"></script>
 
 </body>
