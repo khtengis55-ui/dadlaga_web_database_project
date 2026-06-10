@@ -14,8 +14,7 @@
   font-variation-settings:
     "wdth" 100;
 }
-
-body {
+#index {
   background-color: rgb(127, 248, 125);
   height: 100vh;
   display: flex;

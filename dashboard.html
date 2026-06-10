@@ -1,1 +1,168 @@
-Х.Тэнгис
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Хувийн санхүү бүртгэл</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Өөрийн CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="roboto-regular">
+
+    <nav class="navbar navbar-dark bg-dark shadow-sm mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fa-solid fa-wallet"></i> Санхүүгийн самбар
+            </a>
+
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-light small" id="user-email">....</span>
+
+                <button class="btn btn-outline-light btn-sm" id="btn-logout">
+                    <i class="fa-solid fa-right-from-bracket"></i> Гарах
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-primary text-white p-3">
+                    <div>
+                        <h6 class="text-white-50 text-uppercase small">Үлдэгдэл</h6>
+                        <h3 class="fw-bold mb-0" id="total-balance">0 ₮</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-success text-white p-3">
+                    <div>
+                        <h6 class="text-white-50 text-uppercase small">Нийт орлого</h6>
+                        <h3 class="fw-bold mb-0" id="total-income">0 ₮</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-danger text-white p-3">
+                    <div>
+                        <h6 class="text-white-50 text-uppercase small">Нийт зарлага</h6>
+                        <h3 class="fw-bold mb-0" id="total-expense">0 ₮</h3>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm p-4">
+
+                    <h5 class="fw-bold mb-3">Шинэ гүйлгээ</h5>
+
+                    <form id="transaction-form">
+
+                        <div class="mb-3">
+                            <label>Гүйлгээний төрөл</label>
+                            <select id="tx-type" class="form-select" required>
+                                <option value="income">Орлого</option>
+                                <option value="expense">Зарлага</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Ангилал</label>
+                            <select id="tx-category" class="form-select" required>
+                                <option value="Хүнс">Хоол хүнс</option>
+                                <option value="Цалин">Цалин орлого</option>
+                                <option value="Тээвэр">Унаа, тээвэр</option>
+                                <option value="Орон байр">Байр, цахилгаан</option>
+                                <option value="Үзвэр үйлчилгээ">Чөлөөт цаг, худалдан авалт</option>
+                                <option value="Бусад">Бусад</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Дүн (₮)</label>
+                            <div class="input-group">
+                                <input
+                                    type="number"
+                                    id="tx-amount"
+                                    class="form-control"
+                                    placeholder="0"
+                                    min="1"
+                                    required
+                                >
+                                <span class="input-group-text">₮</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Гүйлгээний огноо</label>
+                            <input type="date" id="tx-date" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Тайлбар</label>
+                            <input
+                                type="text"
+                                id="tx-desc"
+                                class="form-control"
+                                placeholder="Жишээ: И-март орсон, Бонус авсан..."
+                                required
+                            >
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Гүйлгээ нэмэх
+                        </button>
+
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm p-4">
+                    <h5>Гүйлгээний түүх</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Огноо</th>
+                                <th>Ангилал</th>
+                                <th>Тайлбар</th>
+                                <th>Төрөл</th>
+                                <th class="text-end">Дүн</th>
+                                <th class="text-center">Үйлдэл</th>
+                            </tr>
+                            </thead>
+                            <tbody id="transaction-list">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/0c0137132b.js" crossorigin="anonymous"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Auth JS -->
+    <script type="module" src="js/dashboard.js"></script>
+
+</body>
+</html>
