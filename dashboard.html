@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Хувийн санхүү бүртгэл</title>
-    <!-- 🟡 ЗАСВАР: cdnjs болгосон -->
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/css/bootstrap.min.css"
           crossorigin="anonymous">
@@ -12,6 +11,7 @@
 </head>
 
 <body class="roboto-regular">
+    
 
     <nav class="navbar navbar-dark bg-dark shadow-sm mb-4">
         <div class="container-fluid px-4">
@@ -19,9 +19,20 @@
                 <i class="fa-solid fa-wallet"></i> Санхүүгийн самбар
             </a>
             <div class="d-flex align-items-center gap-3">
+                <div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="fa-solid fa-medal text-warning me-2"></i>Badges
+            </h5>
+            <div id="badges-list" class="d-flex flex-wrap gap-3">
+                <div class="text-muted small">Ачааллаж байна...</div>
+            </div>
+        </div>
+    </div>
+</div>
                 <span class="text-light small" id="user-email">....</span>
 
-                <!-- 🔴 ЗАСВАР: Offcanvas нээх товч нэмсэн -->
                 <button class="btn btn-outline-warning btn-sm"
                         type="button"
                         data-bs-toggle="offcanvas"
@@ -68,7 +79,6 @@
                     <form id="transaction-form">
 
                         <div class="mb-3">
-                            <!-- 🔴 ЗАСВАР: for attribute нэмсэн -->
                             <label for="tx-type" class="form-label small fw-medium text-secondary">
                                 Гүйлгээний төрөл
                             </label>
@@ -150,7 +160,6 @@
         </div>
     </div>
 
-    <!-- Offcanvas — container-аас гадна байх нь зөв -->
     <div class="offcanvas offcanvas-end" tabindex="-1"
          id="offcanvasBudget" aria-labelledby="offcanvasBudgetLabel">
         <div class="offcanvas-header bg-dark text-white">
@@ -214,6 +223,7 @@
             </div>
         </div>
     </div>
+    
 
     <script src="https://kit.fontawesome.com/0c0137132b.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js"

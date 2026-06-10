@@ -1,5 +1,5 @@
-// supabase холболтоо импортлож оруулж ирнэ
 import { supabase } from './supabase.js'
+import { refreshBadges } from './badges.js'
 
 // Дэлгэц дээрх HTML элементүүдийг JS хувьсагчид оноож авах
 const transactionForm = document.getElementById('transaction-form');
@@ -9,9 +9,58 @@ const txAmountInput = document.getElementById('tx-amount');
 const txDateInput = document.getElementById('tx-date');
 const txDescInput = document.getElementById('tx-desc');
 
+
+// "YYYY-MM" -> { start: "YYYY-MM-01", nextMonthStart: дараа сарын эхэн }
+function getMonthRange(monthYear) {
+    const [y, m] = monthYear.split('-').map(Number);
+    const start = `${monthYear}-01`;
+    const nextMonthStart =
+        m === 12
+            ? `${y + 1}-01-01`
+            : `${y}-${String(m + 1).padStart(2, '0')}-01`;
+    return { start, nextMonthStart };
+}
+
+// Тухайн САР + АНГИЛЛЫН бүх зарлагын нийлбэр.
+// Огнооны дарааллаас үл хамааран (өмнөх БА дараах зарлагуудыг бүгдийг) нэмж тооцно.
+async function getMonthlyCategorySpend(userId, category, monthYear) {
+    const { start, nextMonthStart } = getMonthRange(monthYear);
+    const { data, error } = await supabase
+        .from('transactions')
+        .select('amount')
+        .eq('user_id', userId)
+        .eq('type', 'expense')
+        .eq('category', category)
+        .gte('date', start)
+        .lt('date', nextMonthStart);
+
+    if (error) {
+        console.error('Зарлагын нийлбэр бодоход алдаа:', error.message);
+        return 0;
+    }
+    return (data || []).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+}
+
+// Тухайн ангилал/сард тогтоосон төсвийг авах (байхгүй бол null)
+async function getBudget(userId, category, monthYear) {
+    const { data, error } = await supabase
+        .from('budgets')
+        .select('limit_amount')
+        .eq('user_id', userId)
+        .eq('category', category)
+        .eq('month_year', monthYear)
+        .maybeSingle();
+
+    if (error) {
+        console.error('Төсөв уншихад алдаа:', error.message);
+        return null;
+    }
+    return data; // null эсвэл { limit_amount }
+}
+
 // Хуудас бэлэн болж, ачаалагдаж дуусах үед ажиллах хэсэг
 document.addEventListener('DOMContentLoaded', async () => {
-    
+
     // Хамгийн түрүүнд хэрэглэгч нэвтэрсэн эсэхийг шалгана
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -24,9 +73,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Хэрэглэгч нэвтэрсэн нь үнэн бол имэйлийг нь navbar дээр харуулна
     document.getElementById('user-email').textContent = user.email;
 
-    await fetchTransactions(); 
-    // Доор бичих төсвийн жагсаалтыг шинэчлэх функцийг дуудна
+    await fetchTransactions();
+    // Төсвийн жагсаалтыг шинэчлэх функцийг дуудна
     if (typeof fetchBudgets === 'function') fetchBudgets();
+    refreshBadges();
 });
 
 transactionForm.addEventListener('submit', async (e) => {
@@ -41,7 +91,6 @@ transactionForm.addEventListener('submit', async (e) => {
 
     // Гүйлгээ нэмэх гэж буй нэвтэрсэн хэрэглэгчийн мэдээллийг Supabase-ээс авах
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    // console.log(user)
 
     if (userError || !user) {
         alert("Сешн дууссан байна. Дахин нэвтэрнэ үү!");
@@ -49,55 +98,40 @@ transactionForm.addEventListener('submit', async (e) => {
         return;
     }
 
-// --- (Формын утгуудыг авсны дараа, Insert хийхийн өмнөх хэсэг) ---
-    
-    // Хэрэв хийж буй гүйлгээ нь ЗАРЛАГА бол ТӨСӨВ ХЭТЭРСЭН ЭСЭХИЙГ ШАЛГАНА
+    // --- (Формын утгуудыг авсны дараа, Insert хийхийн өмнөх хэсэг) ---
     if (type === 'expense') {
-        // Тухайн гүйлгээний огнооноос Жил-Сарыг салгаж авна (Жишээ нь: "2026-06-08" -> "2026-06")
-        const currentMonthYear = date.substring(0, 7);
+        // Гүйлгээний огнооноос Жил-Сарыг салгаж авна ("2026-06-08" -> "2026-06")
+        const monthYear = date.substring(0, 7);
 
-        // Supabase-ээс энэ сард, энэ ангилалд тогтоосон төсөв байгаа эсэхийг хайх
-        const { data: budgetData } = await supabase
-            .from('budgets')
-            .select('limit_amount')
-            .eq('user_id', user.id)
-            .eq('category', category)
-            .eq('month_year', currentMonthYear)
-            .maybeSingle(); // Олдвол ганцхан объект авна, олдохгүй бол null
+        // Энэ сар + ангилалд төсөв тогтоосон эсэхийг шалгах
+        const budget = await getBudget(user.id, category, monthYear);
 
-        // Хэрэв энэ сард энэ ангилалд зориулсан төсөв олдвол цааш шалгана
-        if (budgetData) {
-            const limitAmount = budgetData.limit_amount;
+        if (budget) {
+            const limitAmount = Number(budget.limit_amount);
 
-            // Энэ сард, энэ ангилалд урьд нь хийгдсэн бүх зарлагуудын нийлбэрийг Supabase-с татах
-            const { data: pastExpenses } = await supabase
-                .from('transactions')
-                .select('amount')
-                .eq('user_id', user.id)
-                .eq('type', 'expense')
-                .eq('category', category);
-            
-            // Энэ сард хамаарах зарлагуудыг шүүж нийлбэрийг олно
-            let totalPastExpense = 0;
-            if (pastExpenses) {
-                pastExpenses.forEach(tx => {
-                    // Гүйлгээ бүрийн огноо нь энэ сард хамааралтай эсэхийг шалгах
-                    if (tx.date && tx.date.substring(0, 7) === currentMonthYear) {
-                        totalPastExpense += tx.amount;
-                    }
-                });
-            }
+            // Энэ сард ЭНЭ ангилалд хийгдсэн БҮХ зарлагын нийлбэр
+            // (огнооны дарааллаас үл хамаарч, өмнөх ба дараах гүйлгээг бүгдийг тооцно)
+            const alreadySpent = await getMonthlyCategorySpend(user.id, category, monthYear);
+            const projectedTotal = alreadySpent + amount; // одоогийн шинэ дүнг нэмсэн нийт
 
-            // Хуучин зарлагууд дэар ОДООНЫ ШИНЭ зарлагын дүнг нэмээд лимитээс давж байгааг шалгах
-            if (totalPastExpense + amount > limitAmount) {
-                const currentTotal = totalPastExpense + amount;
-                // Хэрэглэгчээс зөвшөөрөл авна
+            if (projectedTotal > limitAmount) {
+                const overBy = projectedTotal - limitAmount;
                 const proceed = confirm(
-                    `АНХААРУУЛГА!\n\nТаны ${currentMonthYear} сарын "${category}" ангиллын төсвийн хязгаар: ${limitAmount.toLocaleString()} ₮\nОдоогийн нийт зарцуулалт: ${currentTotal.toLocaleString()} ₮ болох гэж байна.\n\nТөсөв хэтрүүлж гүйлгээг үргэлжлүүлэх үү?`
+                    `⚠️ ТӨСӨВ ХЭТЭРЛЭЭ!\n\n` +
+                    `Ангилал: ${category}\n` +
+                    `Сар: ${monthYear}\n` +
+                    `————————————————\n` +
+                    `Төсвийн хязгаар: ${limitAmount.toLocaleString()} ₮\n` +
+                    `Энэ сард аль хэдийн зарцуулсан: ${alreadySpent.toLocaleString()} ₮\n` +
+                    `Энэ гүйлгээ: ${amount.toLocaleString()} ₮\n` +
+                    `————————————————\n` +
+                    `НИЙТ болох дүн: ${projectedTotal.toLocaleString()} ₮\n` +
+                    `Хэтрэх дүн: ${overBy.toLocaleString()} ₮\n\n` +
+                    `Гүйлгээг үргэлжлүүлэх үү?`
                 );
-                
+
                 if (!proceed) {
-                    return; // Хэрэв хэрэглэгч "Цуцлах" дээр дарвал гүйлгээг хадгалахгүй зогсооно!
+                    return; // "Цуцлах" дарвал гүйлгээг хадгалахгүй зогсооно
                 }
             }
         }
@@ -109,8 +143,8 @@ transactionForm.addEventListener('submit', async (e) => {
         .insert([
             {
                 user_id: user.id,        // UUID
-                type: type,              // 'орлого' эсвэл 'зарлага'
-                category: category,      // 'Хоол хүнс', 'Цалин орлого' гэх мэт текст
+                type: type,              // 'income' эсвэл 'expense'
+                category: category,      // 'Хүнс', 'Цалин' гэх мэт
                 amount: amount,          // Мөнгөн дүн (Тоо)
                 description: description,// Дэлгэрэнгүй тайлбар
                 date: date               // Сонгосон огноо (YYYY-MM-DD)
@@ -124,8 +158,9 @@ transactionForm.addEventListener('submit', async (e) => {
     } else {
         alert("Гүйлгээ амжилттай бүртгэгдлээ!");
         transactionForm.reset(); // Формын бүх талбарыг цэвэрлэж хоосон болгоно
+        refreshBadges(); // 🆕 шинэ амжилт (badge) хүртсэн эсэхийг шалгана
     }
-    // Хуудас ачаалагдаж дуусах үед өгөгдлийг уншиж ирж харуулна
+    // Хуудсан дээрх өгөгдлийг шинэчилж харуулна
     fetchTransactions();
 });
 
@@ -154,9 +189,9 @@ async function fetchTransactions() {
     // Ирсэн бүх гүйлгээнүүдийг нэг нэгээр нь шалгаж, орлого зарлагыг нэмнэ
     transactions.forEach(tx => {
         if (tx.type === 'income') {
-            totalIncome += tx.amount;  // Хэрэв орлого бол Нийт Орлого дээр нэмнэ
+            totalIncome += Number(tx.amount) || 0;  // Орлого бол Нийт Орлого дээр нэмнэ
         } else if (tx.type === 'expense') {
-            totalExpense += tx.amount; // Хэрэв зарлага бол Нийт зарлага дээр нэмнэ
+            totalExpense += Number(tx.amount) || 0; // Зарлага бол Нийт зарлага дээр нэмнэ
         }
     });
 
@@ -174,7 +209,7 @@ async function fetchTransactions() {
 
 function renderTransactions(transactions) {
     const listContainer = document.getElementById('transaction-list');
-    
+
     // Хэрэв ямар ч гүйлгээ байхгүй бол хоосон байна гэсэн бичиг харуулна
     if (transactions.length === 0) {
         listContainer.innerHTML = `
@@ -190,7 +225,7 @@ function renderTransactions(transactions) {
 
     // Хүснэгтийг цэвэрлээд, датаг мөр мөрөөр нь залгах
     let htmlContent = '';
-    
+
     transactions.forEach(tx => {
         // Орлого бол ногоон +, Зарлага бол улаан - тэмдэг тавих логик
         const isIncome = tx.type === 'income';
@@ -205,7 +240,7 @@ function renderTransactions(transactions) {
                 <td><span class="badge bg-light text-dark shadow-sm border">${tx.category}</span></td>
                 <td class="text-secondary fw-medium">${tx.description}</td>
                 <td><span class="badge ${badgeColor}">${typeText}</span></td>
-                <td class="text-end fw-bold ${amountColor}">${amountSign}${tx.amount.toLocaleString()} ₮</td>
+                <td class="text-end fw-bold ${amountColor}">${amountSign}${Number(tx.amount).toLocaleString()} ₮</td>
                 <td class="text-center">
                     <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteTransaction('${tx.id}')">
                         <i class="fa-solid fa-trash-can"></i>
@@ -214,7 +249,7 @@ function renderTransactions(transactions) {
             </tr>
         `;
     });
-    // Бэлдсэн  HTML мөрүүдээ хүснэгтийн tbody руу шууд шахаж оруулна
+    // Бэлдсэн HTML мөрүүдээ хүснэгтийн tbody руу шууд шахаж оруулна
     listContainer.innerHTML = htmlContent;
 }
 
@@ -222,7 +257,7 @@ function renderTransactions(transactions) {
 window.deleteTransaction = async function(id) {
     // Хэрэглэгчээс үнэхээр устгах эсэхийг нь лавлаж асууна
     const confirmDelete = confirm("Та энэ гүйлгээг устгахдаа итгэлтэй байна уу?");
-    
+
     if (!confirmDelete) {
         return; // Хэрэв "Үгүй" гэвэл устгах үйлдлийг цуцалж, функцээс гарна
     }
@@ -242,6 +277,8 @@ window.deleteTransaction = async function(id) {
 
         // Устгасны дараа дэлгэц дээрх хүснэгтийг шууд шинэчилж харуулна
         fetchTransactions();
+        // 🆕 Badge тооллого/харагдацыг шинэчилнэ
+        refreshBadges();
 
     } catch (error) {
         alert("Гүйлгээ устгахад алдаа гарлаа: " + error.message);
@@ -256,7 +293,7 @@ const btnLogout = document.getElementById('btn-logout');
 btnLogout.addEventListener('click', async () => {
     // Хэрэглэгчээс үнэхээр гарах эсэхийг нь лавлаж асууна
     const confirmLogout = confirm("Та системээс гарахдаа итгэлтэй байна уу?");
-    
+
     if (!confirmLogout) {
         return; // Хэрэв цуцалбал гарах үйлдлийг зогсооно
     }
@@ -292,7 +329,7 @@ budgetForm.addEventListener('submit', async (e) => {
     // Формоос өгөгдөл уншиж авах
     const category = budgetCategoryInput.value;
     const limitAmount = parseFloat(budgetAmountInput.value);
-    const monthYear = budgetMonthInput.value; 
+    const monthYear = budgetMonthInput.value;
     // Нэвтэрсэн хэрэглэгчийг шалгах
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -315,15 +352,27 @@ budgetForm.addEventListener('submit', async (e) => {
     if (error) {
         alert("Төсөв тогтооход алдаа гарлаа: " + error.message);
     } else {
-        alert(`${monthYear} сарын ${category} ангилалд төсөв амжилттай тогтоогдлоо!`);
+        // хэтэрсэн эсэхийг шалгаж, хэтэрсэн бол шууд анхааруулна.
+        const spent = await getMonthlyCategorySpend(user.id, category, monthYear);
+        let msg = `${monthYear} сарын "${category}" ангилалд төсөв амжилттай тогтоогдлоо!`;
+        if (spent > limitAmount) {
+            const overBy = spent - limitAmount;
+            msg += `\n\n⚠️ Гэхдээ энэ сард аль хэдийн ${spent.toLocaleString()} ₮ зарцуулсан нь ` +
+                   `тогтоосон ${limitAmount.toLocaleString()} ₮ хязгаараас ` +
+                   `${overBy.toLocaleString()} ₮-р хэтэрсэн байна.`;
+        }
+        alert(msg);
+
         budgetForm.reset();
-        
+
         // Bootstrap Offcanvas цэсийг автоматаар хаах код
         const instance = bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasBudget'));
         if (instance) instance.hide();
-        
-        // Доор бичих төсвийн жагсаалтыг шинэчлэх функцийг дуудна
+
+        // Төсвийн жагсаалтыг шинэчлэх
         if (typeof fetchBudgets === 'function') fetchBudgets();
+        //  "Төлөвлөгөөтэй" badge зэргийг шалгана
+        refreshBadges();
     }
 });
 
@@ -345,7 +394,7 @@ async function fetchBudgets() {
     }
 
     const budgetsContainer = document.getElementById('current-budgets-list');
-    
+
     if (!budgets || budgets.length === 0) {
         budgetsContainer.innerHTML = `
             <h6 class="fw-bold text-dark mb-3">Одоогийн тогтоосон төсвүүд:</h6>
@@ -354,18 +403,56 @@ async function fetchBudgets() {
         return;
     }
 
+    //  Бүх зарлагыг НЭГ удаа татаж, "ангилал|сар"-аар нийлбэрлэнэ
+    const { data: expenses } = await supabase
+        .from('transactions')
+        .select('amount, category, date')
+        .eq('user_id', user.id)
+        .eq('type', 'expense');
+
+    const spendMap = {}; // "category|YYYY-MM" -> нийт зарлага
+    (expenses || []).forEach(tx => {
+        const ym = (tx.date || '').substring(0, 7);
+        const key = `${tx.category}|${ym}`;
+        spendMap[key] = (spendMap[key] || 0) + (Number(tx.amount) || 0);
+    });
+
     let htmlContent = `<h6 class="fw-bold text-dark mb-3">Одоогийн тогтоосон төсвүүд:</h6>`;
-    
+
     budgets.forEach(b => {
+        const limit = Number(b.limit_amount) || 0;
+        const spent = spendMap[`${b.category}|${b.month_year}`] || 0;
+        const percent = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+        const isOver = spent > limit;
+
+        let barColor = 'bg-success';
+        if (isOver) barColor = 'bg-danger';
+        else if (percent >= 80) barColor = 'bg-warning';
+
+        const remaining = limit - spent;
+        const statusText = isOver
+            ? `<span class="text-danger fw-bold">${Math.abs(remaining).toLocaleString()} ₮-р хэтэрсэн</span>`
+            : `<span class="text-muted">${remaining.toLocaleString()} ₮ үлдсэн</span>`;
+
         htmlContent += `
             <div class="card p-2 mb-2 bg-light border-0 shadow-sm">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center mb-1">
                     <div>
                         <span class="fw-bold small text-dark">${b.category}</span>
                         <span class="text-muted mx-1">•</span>
                         <span class="small text-secondary">${b.month_year}</span>
                     </div>
-                    <span class="fw-bold text-primary small">${b.limit_amount.toLocaleString()} ₮</span>
+                    <span class="fw-bold small ${isOver ? 'text-danger' : 'text-primary'}">
+                        ${spent.toLocaleString()} / ${limit.toLocaleString()} ₮
+                    </span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar ${barColor}" role="progressbar"
+                         style="width: ${percent}%;"
+                         aria-valuenow="${Math.round(percent)}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="text-end mt-1" style="font-size: 0.75rem;">
+                    ${statusText}
                 </div>
             </div>
         `;
