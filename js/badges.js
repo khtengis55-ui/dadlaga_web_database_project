@@ -247,7 +247,6 @@ export async function refreshBadges() {
 
   if (newlyAwarded.length > 0) {
     const names = newlyAwarded.map((b) => `🏅 ${b.label}`).join('\n');
-    // (Хүсвэл доорх alert-ийг Bootstrap toast болгож сольж болно)
     alert(`Баяр хүргэе! Та шинэ тэмдэг хүртлээ:\n\n${names}`);
   }
 }
