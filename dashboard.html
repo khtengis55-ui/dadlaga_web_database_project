@@ -8,29 +8,75 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/css/bootstrap.min.css"
           crossorigin="anonymous">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ── badges.js-ийн render output-ийг badges bar-т тохируулах ── */
+
+        /* Container */
+        #badges-list {
+            display: flex !important;
+            align-items: center !important;
+            flex-wrap: nowrap !important;
+            gap: 8px !important;
+            overflow: hidden !important;
+        }
+
+        /* "Цуглуулсан тэмдэг: X/Y" мөр → inline, жижиг */
+        #badges-list .w-100 {
+            width: auto !important;
+            flex-shrink: 0 !important;
+            margin-bottom: 0 !important;
+            font-size: 0.6rem !important;
+            white-space: nowrap !important;
+            line-height: 1 !important;
+            padding-right: 4px !important;
+            border-right: 1px solid #444 !important;
+        }
+
+        /* Badge wrapper div */
+        #badges-list .text-center {
+            width: auto !important;
+            flex-shrink: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* 56px circle → 24px болгох */
+        #badges-list .rounded-circle {
+            width: 24px !important;
+            height: 24px !important;
+            min-width: 24px !important;
+            min-height: 24px !important;
+            margin: 0 !important;
+        }
+
+        /* Circle дотрох icon */
+        #badges-list .rounded-circle .fa-solid,
+        #badges-list .rounded-circle i {
+            font-size: 0.65rem !important;
+        }
+
+        /* Badge-ийн label текстийг нуух */
+        #badges-list .text-center .small,
+        #badges-list .text-center .fw-medium {
+            display: none !important;
+        }
+
+        /* Locked badge: бага opacity */
+        #badges-list .opacity-50 {
+            opacity: 0.3 !important;
+        }
+    </style>
 </head>
 
 <body class="roboto-regular">
-    
 
-    <nav class="navbar navbar-dark bg-dark shadow-sm mb-2">
+    <!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
+    <nav class="navbar navbar-dark bg-dark shadow-sm mb-0">
         <div class="container-fluid px-2">
             <a class="navbar-brand fw-bold" href="#">
                 <i class="fa-solid fa-wallet"></i> Санхүүгийн самбар
             </a>
             <div class="d-flex align-items-center gap-2">
-                <div class="row mb-2">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm p-2">
-            <h6 class="fw-bold mb-2">
-                <i class="fa-solid fa-medal text-warning me-2"></i>Badges
-            </h6>
-            <div id="badges-list" class="d-flex flex-wrap gap-3">
-                <div class="text-muted small">Ачааллаж байна...</div>
-            </div>
-        </div>
-    </div>
-</div>
                 <span class="text-light small" id="user-email">....</span>
 
                 <button class="btn btn-outline-warning btn-sm"
@@ -48,8 +94,22 @@
         </div>
     </nav>
 
-    <div class="container-fluid px-4">
+    <!-- ═══════════════════════ BADGES BAR ═══════════════════════ -->
+    <div class="border-bottom px-4 d-flex align-items-center gap-2"
+         style="background:#1a1e23; height:32px; overflow:hidden; position:relative;">
+        <i class="fa-solid fa-medal text-warning" style="font-size:0.6rem; opacity:0.8; flex-shrink:0;"></i>
+        <span class="text-secondary" style="font-size:0.6rem; white-space:nowrap; letter-spacing:0.05em; flex-shrink:0;">
+            BADGES
+        </span>
+        <div id="badges-list" class="d-flex align-items-center" style="overflow:hidden; flex:1;">
+            <span style="font-size:0.6rem; color:#555;">Ачааллаж байна...</span>
+        </div>
+    </div>
 
+    <!-- ═══════════════════════ MAIN CONTENT ═══════════════════════ -->
+    <div class="container-fluid px-4 pt-4">
+
+        <!-- Summary Cards -->
         <div class="row g-3 mb-4">
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm bg-primary text-white p-3">
@@ -71,6 +131,7 @@
             </div>
         </div>
 
+        <!-- Transaction Form + History -->
         <div class="row g-4">
 
             <div class="col-lg-4">
@@ -160,6 +221,7 @@
         </div>
     </div>
 
+    <!-- ═══════════════════════ BUDGET OFFCANVAS ═══════════════════════ -->
     <div class="offcanvas offcanvas-end" tabindex="-1"
          id="offcanvasBudget" aria-labelledby="offcanvasBudgetLabel">
         <div class="offcanvas-header bg-dark text-white">
@@ -223,8 +285,8 @@
             </div>
         </div>
     </div>
-    
 
+    <!-- ═══════════════════════ SCRIPTS ═══════════════════════ -->
     <script src="https://kit.fontawesome.com/0c0137132b.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js"
             crossorigin="anonymous"></script>
